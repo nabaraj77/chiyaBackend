@@ -7,7 +7,7 @@ import { User } from "../models/user.models.js";
 //Generating Access and Refresh Token
 const generateAccessaAndRefreshToken = async (userId) => {
   try {
-    const user = await User.findOne({ userId });
+    const user = await User.findById(userId);
     const accessToken = user.generateAccessToken();
     const refreshToken = user.generateRefreshToken();
     //set refresh token to database
@@ -101,13 +101,13 @@ const loginUser = asyncHandler(async (req, res) => {
   //password check
   //access and refresh token
   //send cookie
-  const { email, username, password } = req.body;
-  if (!email || !username) {
-    throw new ApiError(400, "Username or email is required");
+  const { email, password } = req.body;
+  if (!email) {
+    throw new ApiError(400, "Email is required");
   }
   //findind user in db
   const user = await User.findOne({
-    $or: [{ username }, { email }],
+    email,
   });
   if (!user) {
     throw new ApiError(404, "User does not exists");
@@ -124,7 +124,7 @@ const loginUser = asyncHandler(async (req, res) => {
   );
   //send through cookie
   const loggedInUser = await User.findById(user._id).select(
-    "-password refreshToken"
+    "-password -refreshToken"
   );
   const options = {
     httpOnly: true,
